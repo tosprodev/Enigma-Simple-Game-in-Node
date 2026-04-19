@@ -3,7 +3,10 @@
 
 **Enigma** is a high-fidelity, cinematic puzzle ecosystem designed for creators and operatives. Built with a sophisticated hacker aesthetic, it transforms traditional puzzles into **time-sensitive tactical missions**.  
 
-Whether reconstructing encrypted intel via visual tiles or decrypting high-level ciphers, every move is **logged, analyzed, and tracked** in a centralized **Command Center**.
+🌐 **Live Deployment:**  
+👉 https://slateblue-mole-540402.hostingersite.com  
+
+Every action is **tracked, logged, and analyzed** through a centralized **Command Center**, delivering a true cyber-operations experience.
 
 ---
 
@@ -11,6 +14,7 @@ Whether reconstructing encrypted intel via visual tiles or decrypting high-level
 - 🎮 Core Gameplay Mechanics  
 - ⚙️ System Architecture  
 - 🛡️ Administrative Control  
+- 🧠 Master Dashboard (Extended)  
 - 🎨 User Experience & UI  
 - 🔌 API Reference  
 - 🚀 Installation & Setup  
@@ -22,91 +26,180 @@ Whether reconstructing encrypted intel via visual tiles or decrypting high-level
 ## 🎮 Core Gameplay Mechanics
 
 ### 1. 🧩 Visual Swap (Image-Based Intel)
-The standard protocol for visual reconstruction.
 
-- **Dynamic Grids**  
-  Deploy missions from **3×3 (Easy)** to **10×10 (Impossible)**.
+- **Dynamic Grid Scaling**  
+  From **3×3 (Recruit)** → **10×10 (Black Ops Level)**  
 
-- **Rotation Encryption**  
-  Tiles rotate in 90° increments.  
-  - 📱 Mobile: Double-tap  
-  - 🖥️ Desktop: Right-click  
+- **Rotation Encryption Layer**  
+  Tiles rotate randomly → must be corrected during placement  
 
-- **Intel Hints**  
-  Operatives have a limited **Memory Buffer (5 hints)** to preview a blurred target image.
+- **Memory Buffer (Hint System)**  
+  - Max 5 tactical hints  
+  - Blurred preview system  
+  - Limited resource → strategic usage required  
 
 ---
 
 ### 2. 🔐 Cipher Breach (Text-Based Decryption)
-A monospaced decryption challenge.
 
-- **Positional Feedback**  
-  Correct placements trigger:  
-  - ✅ Tactical Green Glow  
-  - ⚡ Pulse Effect  
+- **Live Tactical Feedback Engine**
+  - ✅ Green = Correct placement  
+  - ⚡ Pulse Animation = Confirmed breach  
 
-- **Grid Padding**  
-  Automatically computes square root of string length and fills empty blocks — spacing becomes part of the puzzle.
+- **Auto Grid Computation**
+  - Square root logic builds grid  
+  - Empty slots become **decoy space nodes**  
 
 ---
 
 ## ⚙️ System Architecture
 
 ### 🧠 Hybrid Input Engine
-The `play.html` engine handles unified interaction:
 
-- **Tap / Select** → Two-click swap logic  
-- **Drag & Drop** → Smooth tile repositioning  
-- **Collision Detection** → Uses `elementFromPoint` for precision targeting  
+Supports multi-mode interaction:
+
+- Click-to-swap  
+- Drag & drop with coordinate tracking  
+- Real-time collision detection using `elementFromPoint()`  
 
 ---
 
 ### 🗄️ Data Ecosystem
 
-- **Persistence** → SQLite3 (users, missions, logs)  
-- **Cascade Purging** → Deleting missions removes all related logs  
-- **Pagination** → 10 items per page for performance optimization  
+- **SQLite3 Database**
+  - Users  
+  - Missions  
+  - Attempt Logs  
+
+- **Cascade Deletion Engine**
+  - Removing a mission wipes all analytics  
+
+- **Pagination Engine**
+  - Optimized rendering (10 missions per page)  
 
 ---
 
 ## 🛡️ Administrative Control
 
-A hidden **System Override (Admin Portal)** provides:
+### 🔐 Admin Access Portal
 
-- 🔥 **Global Purge** → Delete any mission  
-- 👤 **Operative Management** → Monitor users & join dates  
-- 🔑 **Credential Control** → Update root credentials securely  
-- 📊 **Ecosystem Analytics Dashboard**:
-  - Total users  
-  - Mission counts  
-  - Global breach attempts  
+👉 `/admin-login.html`
+
+This hidden route unlocks **System Override Mode**
+
+---
+
+### 🔑 Default Admin Credentials
+
+```txt
+Email:    kaif.mth@gmail.com
+Password: 12345678
+````
+
+> ⚠️ Immediately update credentials after first login.
+
+---
+
+### 🧰 Admin Capabilities
+
+* 🔥 Global Mission Deletion
+* 👤 User Monitoring System
+* 🔐 Secure Credential Update
+* 📊 Full Ecosystem Visibility
+
+---
+
+## 🧠 Master Dashboard (Extended Intelligence System)
+
+The **Admin Dashboard** acts as a real-time tactical intelligence hub.
+
+### 📊 Core Metrics
+
+* 👥 Total Registered Operatives
+* 🧩 Total Missions Deployed
+* ⚡ Total Breach Attempts
+* 📈 Success vs Failure Ratio
+
+---
+
+### 🧾 Mission Intelligence Panel
+
+* Mission Name & Difficulty
+* Creator Identity
+* Total Attempts per Mission
+* Completion Rate (%)
+* Time-to-Solve Analytics
+
+---
+
+### 👁️ Operative Surveillance
+
+* User Email Tracking
+* Join Timestamp
+* Activity Frequency
+* Last Active Status
+
+---
+
+### 🔍 Breach Logs (Deep Tracking)
+
+Each attempt records:
+
+* Timestamp
+* Puzzle Type
+* Moves Taken
+* Completion Status
+* Time Duration
+
+---
+
+### 🧹 System Hygiene Tools
+
+* Bulk Mission Purge
+* Selective Data Cleanup
+* Log Reset Engine
+
+---
+
+### 🔐 Security Layer
+
+* Password verification before admin updates
+* Session-based authorization
+* Protected API routes
 
 ---
 
 ## 🎨 User Experience & UI
 
-- **Glassmorphism UI**  
-  Translucent panels with `backdrop-filter: blur(16px)`
+* 🧊 **Glassmorphism Design System**
 
-- **Sticky Layout System**  
-  Footer remains adaptive across all page lengths  
+  * Blur overlays
+  * Neon accent highlights
 
-- **Cinematic Feedback**  
-  Toast notifications instead of browser alerts  
+* 📌 **Sticky Layout Engine**
 
-- **Mobile-First Design**  
-  - Responsive sidebars  
-  - Touch-optimized interactions  
+  * Footer adapts dynamically
+
+* 🔔 **Toast Notification System**
+
+  * No default alerts
+  * Immersive system messages
+
+* 📱 **Mobile-Optimized Interface**
+
+  * Slide-out panels
+  * Gesture-friendly grids
 
 ---
 
 ## 🔌 API Reference
 
 ### 🔐 Auth
+
 ```http
 POST /api/request-otp
 POST /api/verify-otp
-````
+```
 
 ### 🎯 Missions
 
@@ -128,16 +221,14 @@ GET  /api/admin/stats
 
 ## 🚀 Installation & Setup
 
-### 📦 Prerequisites
+### 📦 Requirements
 
 * Node.js
 * NPM
 
 ---
 
-### ⚙️ Environment Setup
-
-Create a `.env` file in the root directory:
+### ⚙️ Environment Configuration
 
 ```env
 PORT=3000
@@ -148,7 +239,7 @@ BASE_URL=http://localhost:3000
 
 ---
 
-### ▶️ Run the Application
+### ▶️ Run Locally
 
 ```bash
 npm install
@@ -157,78 +248,68 @@ node server.js
 
 ---
 
-### 🔑 First Access
+### 🌐 Access Points
 
-Login using:
-
-```
-Email: kaif.mth@gmail.com
-```
-
-This initializes the **default admin account**.
+* User Interface → `/index.html`
+* Admin Panel → `/admin-login.html`
+* Dashboard → `/dashboard.html`
 
 ---
 
-## 🔐 Gmail App Password Setup (IMPORTANT)
+## 🔐 Gmail App Password Setup
 
-To enable email services (OTP system), you must generate a **Gmail App Password**.
-
-### ⚠️ Requirements
-
-* 2-Step Verification must be enabled on your Google account
+### ⚠️ Required for OTP System
 
 ---
 
-### 🪜 Steps to Generate App Password
+### Steps
 
-1. Go to: [https://myaccount.google.com/security](https://myaccount.google.com/security)
-2. Enable **2-Step Verification** (if not already enabled)
-3. Navigate to **App Passwords**
+1. Visit: [https://myaccount.google.com/security](https://myaccount.google.com/security)
+2. Enable **2-Step Verification**
+3. Open **App Passwords**
 4. Select:
 
-   * App: **Mail**
-   * Device: **Other (Custom Name)** → Enter: `Enigma Platform`
+   * App → Mail
+   * Device → Custom (`Enigma Platform`)
 5. Click **Generate**
 
 ---
 
-### 🔑 Output Example
+### Example
 
-You will receive a 16-character password like:
-
-```
+```txt
 abcd efgh ijkl mnop
 ```
 
 ---
 
-### 📌 Usage
-
-Add it to your `.env` file:
+### Add to `.env`
 
 ```env
 EMAIL_PASS=abcdefghijklmnop
 ```
 
-> ⚠️ Do NOT use your actual Gmail password. Always use the App Password.
+> ❗ Never use your real Gmail password.
 
 ---
 
 ## 📜 License & Credits
 
 **Enigma Tactical Challenge**
-Developed and maintained by **Md Kaif**
+Developed by **Md Kaif**
 
-Designed for:
+---
 
-* Tactical engagement
-* Cognitive enhancement
-* Secure puzzle ecosystems
+### 🧠 Vision
+
+* Tactical Thinking
+* Cyber Intelligence Simulation
+* Gamified Decryption Systems
 
 ---
 
 © 2026 Enigma Platform
-**Root Access Only**
+**Root Access Only | Authorized Operatives Only**
 
 ```
 ```
