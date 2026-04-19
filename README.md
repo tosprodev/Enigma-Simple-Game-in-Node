@@ -1,128 +1,234 @@
-🕵️‍♂️ Enigma: Tactical Breach Platform
+````markdown
+# 🕵️‍♂️ Enigma: Tactical Breach Platform
 
-Enigma is a high-fidelity, cinematic puzzle ecosystem designed for creators and "operatives." Built with a sophisticated hacker aesthetic, it transforms traditional puzzles into time-sensitive tactical missions. Whether reconstructing encrypted intel via visual tiles or unscrambling high-level ciphers, every move is logged, analyzed, and tracked in a centralized Command Center.
+**Enigma** is a high-fidelity, cinematic puzzle ecosystem designed for creators and operatives. Built with a sophisticated hacker aesthetic, it transforms traditional puzzles into **time-sensitive tactical missions**.  
 
-📑 Table of Contents
+Whether reconstructing encrypted intel via visual tiles or decrypting high-level ciphers, every move is **logged, analyzed, and tracked** in a centralized **Command Center**.
 
-Core Gameplay Mechanics
+---
 
-System Architecture
+## 📑 Table of Contents
+- 🎮 Core Gameplay Mechanics  
+- ⚙️ System Architecture  
+- 🛡️ Administrative Control  
+- 🎨 User Experience & UI  
+- 🔌 API Reference  
+- 🚀 Installation & Setup  
+- 🔐 Gmail App Password Setup  
+- 📜 License & Credits  
 
-Administrative Control
+---
 
-User Experience & UI
+## 🎮 Core Gameplay Mechanics
 
-API Reference
-
-Installation & Setup
-
-Security Protocols
-
-🎮 Core Gameplay Mechanics
-
-1. Visual Swap (Image-Based Intel)
-
+### 1. 🧩 Visual Swap (Image-Based Intel)
 The standard protocol for visual reconstruction.
 
-Dynamic Grids: Creators can deploy missions ranging from 3x3 (Easy) for quick breaches to 10x10 (Impossible) for master-level operatives.
+- **Dynamic Grids**  
+  Deploy missions from **3×3 (Easy)** to **10×10 (Impossible)**.
 
-Rotation Encryption: For added difficulty, tiles are randomly rotated in 90-degree increments. Operatives must double-tap (mobile) or right-click (desktop) to correct orientation while positioning.
+- **Rotation Encryption**  
+  Tiles rotate in 90° increments.  
+  - 📱 Mobile: Double-tap  
+  - 🖥️ Desktop: Right-click  
 
-Intel Hints: Operatives have a limited "Memory Buffer" (5 hints) to view a blurred version of the target image.
+- **Intel Hints**  
+  Operatives have a limited **Memory Buffer (5 hints)** to preview a blurred target image.
 
-2. Cipher Breach (Text-Based Decryption)
+---
 
-A new monospaced decryption challenge.
+### 2. 🔐 Cipher Breach (Text-Based Decryption)
+A monospaced decryption challenge.
 
-Positional Feedback: As characters are moved, the system provides real-time tactical feedback. Correctly placed letters trigger a Tactical Green Glow and a pulse effect, indicating that part of the "Secret Key" is breached.
+- **Positional Feedback**  
+  Correct placements trigger:  
+  - ✅ Tactical Green Glow  
+  - ⚡ Pulse Effect  
 
-Grid Padding: The engine automatically calculates the square root of the string length and pads the grid with blank "space" blocks, requiring operatives to manage spacing as part of the puzzle.
+- **Grid Padding**  
+  Automatically computes square root of string length and fills empty blocks — spacing becomes part of the puzzle.
 
-⚙️ System Architecture
+---
 
-Hybrid Input Engine
+## ⚙️ System Architecture
 
-The play.html engine features a custom-built pointer event listener that manages a unified input stream:
+### 🧠 Hybrid Input Engine
+The `play.html` engine handles unified interaction:
 
-Tap/Select: Classic two-click swap logic.
+- **Tap / Select** → Two-click swap logic  
+- **Drag & Drop** → Smooth tile repositioning  
+- **Collision Detection** → Uses `elementFromPoint` for precision targeting  
 
-Drag & Drop: Press and hold to detach a card from the grid. Moving it over another piece and releasing triggers a coordinate-based swap.
+---
 
-Collision Detection: Uses elementFromPoint to determine the swap target during high-speed dragging operations.
+### 🗄️ Data Ecosystem
 
-Data Ecosystem
+- **Persistence** → SQLite3 (users, missions, logs)  
+- **Cascade Purging** → Deleting missions removes all related logs  
+- **Pagination** → 10 items per page for performance optimization  
 
-Persistence: SQLite3 manages users, mission metadata, and play logs.
+---
 
-Cascade Purging: Deleting a mission automatically purges all associated analytics logs to ensure system hygiene.
+## 🛡️ Administrative Control
 
-Pagination: The "Mission Archives" uses client-side pagination (10 items per page) to ensure the UI remains performant even with hundreds of deployed missions.
+A hidden **System Override (Admin Portal)** provides:
 
-🛡️ Administrative Control
+- 🔥 **Global Purge** → Delete any mission  
+- 👤 **Operative Management** → Monitor users & join dates  
+- 🔑 **Credential Control** → Update root credentials securely  
+- 📊 **Ecosystem Analytics Dashboard**:
+  - Total users  
+  - Mission counts  
+  - Global breach attempts  
 
-The platform includes a hidden System Override (Admin) portal for global oversight:
+---
 
-Global Purge: Admins can delete any mission across the entire ecosystem.
+## 🎨 User Experience & UI
 
-Operative Management: Monitor all registered users and their join dates.
+- **Glassmorphism UI**  
+  Translucent panels with `backdrop-filter: blur(16px)`
 
-System Integrity: Admins can update their own root credentials and profile data via a secure authorization check requiring the current master passkey.
+- **Sticky Layout System**  
+  Footer remains adaptive across all page lengths  
 
-Ecosystem Analytics: A dedicated "Master Control" dashboard showing total users, global mission counts, and every breach attempt made site-wide.
+- **Cinematic Feedback**  
+  Toast notifications instead of browser alerts  
 
-🎨 User Experience & UI
+- **Mobile-First Design**  
+  - Responsive sidebars  
+  - Touch-optimized interactions  
 
-Glassmorphism: Layers of translucent panels with backdrop-filter: blur(16px) provide visual depth.
+---
 
-Sticky Architecture: Custom CSS ensures the footer remains anchored to the bottom of the viewport on short pages but flows naturally on long, paginated lists.
+## 🔌 API Reference
 
-Cinematic Feedback: Uses "Toast" notifications for system feedback (e.g., "Mission Purged," "Key Sent") instead of standard browser alerts to maintain immersion.
+### 🔐 Auth
+```http
+POST /api/request-otp
+POST /api/verify-otp
+````
 
-Mobile-First: Fully responsive sidebars that slide out of view and touch-optimized hit areas for grid pieces.
+### 🎯 Missions
 
-🔌 API Reference
+```http
+POST   /api/puzzles
+GET    /api/dashboard/:email
+DELETE /api/puzzle/:id
+```
 
-Auth
+### 🛡️ Admin
 
-POST /api/request-otp - Transmits a 6-digit code via cinematic email.
+```http
+POST /api/admin/login
+PUT  /api/admin/profile
+GET  /api/admin/stats
+```
 
-POST /api/verify-otp - Authorizes the session and grants access to the Command Center.
+---
 
-Missions
+## 🚀 Installation & Setup
 
-POST /api/puzzles - Deploys a new mission (Handles Multipart Image uploads + JSON data).
+### 📦 Prerequisites
 
-GET /api/dashboard/:email - Fetches all missions and logs for a specific creator.
+* Node.js
+* NPM
 
-DELETE /api/puzzle/:id - Permanently erases mission data and logs.
+---
 
-Admin
+### ⚙️ Environment Setup
 
-POST /api/admin/login - Validates Root credentials.
+Create a `.env` file in the root directory:
 
-PUT /api/admin/profile - Updates Master Admin identity (Requires password verification).
-
-GET /api/admin/stats - Compiles global ecosystem metrics.
-
-🚀 Installation & Setup
-
-Dependencies: Ensure you have Node.js and NPM installed.
-
-Environment: Create a .env file in the root directory.
-
+```env
 PORT=3000
 EMAIL_USER=your_email@gmail.com
 EMAIL_PASS=your_gmail_app_password
 BASE_URL=http://localhost:3000
+```
 
+---
 
-Boot: Run npm install followed by node server.js.
+### ▶️ Run the Application
 
-First Access: Login with the default master email kaif.mth@gmail.com to trigger the seed admin account.
+```bash
+npm install
+node server.js
+```
 
-📜 License & Credits
+---
 
-Enigma Tactical Challenge is developed and maintained by Md Kaif.
-Designed for high-performance tactical engagement and mental training.
+### 🔑 First Access
 
-© 2026 Enigma Platform. Root Access Only.
+Login using:
+
+```
+Email: kaif.mth@gmail.com
+```
+
+This initializes the **default admin account**.
+
+---
+
+## 🔐 Gmail App Password Setup (IMPORTANT)
+
+To enable email services (OTP system), you must generate a **Gmail App Password**.
+
+### ⚠️ Requirements
+
+* 2-Step Verification must be enabled on your Google account
+
+---
+
+### 🪜 Steps to Generate App Password
+
+1. Go to: [https://myaccount.google.com/security](https://myaccount.google.com/security)
+2. Enable **2-Step Verification** (if not already enabled)
+3. Navigate to **App Passwords**
+4. Select:
+
+   * App: **Mail**
+   * Device: **Other (Custom Name)** → Enter: `Enigma Platform`
+5. Click **Generate**
+
+---
+
+### 🔑 Output Example
+
+You will receive a 16-character password like:
+
+```
+abcd efgh ijkl mnop
+```
+
+---
+
+### 📌 Usage
+
+Add it to your `.env` file:
+
+```env
+EMAIL_PASS=abcdefghijklmnop
+```
+
+> ⚠️ Do NOT use your actual Gmail password. Always use the App Password.
+
+---
+
+## 📜 License & Credits
+
+**Enigma Tactical Challenge**
+Developed and maintained by **Md Kaif**
+
+Designed for:
+
+* Tactical engagement
+* Cognitive enhancement
+* Secure puzzle ecosystems
+
+---
+
+© 2026 Enigma Platform
+**Root Access Only**
+
+```
+```
