@@ -1,0 +1,36 @@
+<header class="h-16 glass-panel flex items-center justify-between px-4 sm:px-8 border-b border-white/10 z-20 shrink-0">
+    <div class="flex items-center">
+        <button onclick="toggleSidebar()" class="md:hidden text-slate-300 hover:text-white mr-4">
+            <i data-lucide="menu" class="w-6 h-6"></i>
+        </button>
+        
+        <a href="/dashboard.html" class="md:hidden flex items-center hover:opacity-80 transition-opacity">
+            <i data-lucide="film" class="w-5 h-5 text-blue-400 mr-2"></i>
+            <span class="font-bold tracking-wider uppercase text-sm text-white">Enigma</span>
+        </a>
+    </div>
+
+    <div class="relative ml-auto">
+        <button onclick="toggleProfileDropdown()" class="flex items-center gap-3 focus:outline-none">
+            <div class="text-right hidden sm:block">
+                <p id="header-name" class="text-sm font-semibold text-white">Loading...</p>
+                <p class="text-xs text-blue-400 font-mono tracking-wider">Access Level: Creator</p>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center border-2 border-white/20 shadow-[0_0_15px_rgba(59,130,246,0.3)] transition transform hover:scale-105">
+                <i data-lucide="user" class="w-5 h-5 text-white"></i>
+            </div>
+        </button>
+
+        <div id="profile-dropdown" class="hidden absolute right-0 mt-3 w-56 glass-panel border border-white/10 rounded-xl shadow-2xl py-2 z-50 origin-top-right transform transition-all opacity-0 scale-95">
+            <div class="px-4 py-3 border-b border-white/10">
+                <p id="dd-name" class="text-sm font-bold text-white truncate"></p>
+                <p id="dd-email" class="text-xs text-slate-400 truncate mt-0.5"></p>
+            </div>
+            <div class="py-1">
+                <button onclick="logout()" class="w-full flex items-center px-4 py-2 text-sm text-red-400 hover:bg-white/5 transition">
+                    <i data-lucide="log-out" class="w-4 h-4 mr-2"></i> Sign Out
+                </button>
+            </div>
+        </div>
+    </div>
+</header>

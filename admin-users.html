@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enigma - Admin Users</title>
+    <script>
+        if (!localStorage.getItem('enigma_admin')) window.location.replace('/admin-login.html');
+        function adminLogout() { localStorage.removeItem('enigma_admin'); window.location.replace('/admin-login.html'); }
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+    <style> 
+        body { font-family: 'Montserrat', sans-serif; background-color: #0f172a; color: white; } 
+        .glass-panel { background: rgba(15, 23, 42, 0.9); border-right: 1px solid rgba(255, 255, 255, 0.05); } 
+        #sidebar { transition: transform 0.3s ease-in-out; }
+        .sidebar-open { transform: translateX(0) !important; }
+        .sidebar-closed { transform: translateX(-100%); }
+        @media (min-width: 768px) { .sidebar-closed { transform: translateX(0); } }
+    </style>
+</head>
+<body class="h-screen flex relative">
+    <div id="sidebar-backdrop" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden"></div>
+    <div id="sidebar-placeholder"></div>
+    <div class="flex-1 flex flex-col h-full overflow-hidden">
+        <div id="admin-header-placeholder"></div>
+        <main class="flex-1 overflow-y-auto p-4 sm:p-8"><div class="w-full max-w-6xl mx-auto">
+            <h1 class="text-3xl font-black mb-8 uppercase tracking-tighter italic">Registered Operatives</h1>
+            <div class="bg-slate-900/60 border border-white/10 rounded-xl overflow-hidden overflow-x-auto">
+                <table class="w-full text-left text-sm whitespace-nowrap">
+                    <thead class="bg-black/60 text-xs text-slate-400 uppercase font-black tracking-widest border-b border-white/5"><tr><th class="p-4">Name</th><th class="p-4">Email</th><th class="p-4">Role</th><th class="p-4">Joined</th><th class="p-4 text-right">Actions</th></tr></thead>
+                    <tbody id="users-table" class="divide-y divide-white/5"></tbody>
+                </table>
+            </div>
+        </div></main>
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            await loadComponent('sidebar-placeholder', '/components/admin-sidebar.html');
+            await loadComponent('admin-header-placeholder', '/components/admin-header.html');
+            lucide.createIcons();
+            const admin = JSON.parse(localStorage.getItem('enigma_admin'));
+            document.getElementById('admin-header-name').textContent = admin.name;
+            document.getElementById('admin-dd-name').textContent = admin.name;
+            document.getElementById('admin-dd-email').textContent = admin.email;
+            document.getElementById('admin-page-title').innerText = "Agent Database";
+            const nav = document.getElementById('nav-admin-users');
+            if(nav) nav.className = "w-full flex items-center px-4 py-3 rounded-lg bg-red-600/10 text-red-400 border border-red-500/30 transition-all";
+            loadUsers();
+        });
+        function loadUsers() {
+            fetch('/api/admin/users').then(r=>r.json()).then(users => {
+                document.getElementById('users-table').innerHTML = users.map(u => `
+                    <tr class="hover:bg-white/5">
+                        <td class="p-4 font-bold">${u.name}</td><td class="p-4 text-blue-400">${u.email}</td>
+                        <td class="p-4"><span class="px-2 py-1 rounded text-[10px] uppercase font-black ${u.role==='admin'?'bg-red-500/20 text-red-400':'bg-slate-700 text-slate-300'}">${u.role}</span></td>
+                        <td class="p-4 text-xs text-slate-500">${new Date(u.created_at).toLocaleDateString()}</td>
+                        <td class="p-4 text-right">${u.role !== 'admin' ? `<button onclick="deleteUser('${u.email}')" class="text-red-500 hover:text-white bg-red-500/10 hover:bg-red-600 p-2 rounded transition"><i data-lucide="trash-2" class="w-4 h-4"></i></button>` : ''}</td>
+                    </tr>`).join('');
+                lucide.createIcons();
+            });
+        }
+        function deleteUser(email) {
+            if(confirm(`⚠️ PERMANENT PURGE: Delete ${email} and all their generated missions?`)) {
+                fetch(`/api/admin/user/${email}`, { method: 'DELETE' }).then(() => loadUsers());
+            }
+        }
+        async function loadComponent(id, path) { try { const res = await fetch(path); if(res.ok) document.getElementById(id).outerHTML = await res.text(); } catch(e){} }
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('sidebar-closed'); document.getElementById('sidebar').classList.toggle('sidebar-open'); document.getElementById('sidebar-backdrop').classList.toggle('hidden'); }
+        function toggleAdminProfileDropdown() { const dd = document.getElementById('admin-profile-dropdown'); dd.classList.toggle('hidden'); setTimeout(() => { dd.classList.toggle('opacity-0'); dd.classList.toggle('scale-95'); }, 10); }
+    </script>
+</body>
+</html>

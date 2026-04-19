@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0f172a">
+    <title>Enigma - Mission Archives</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Montserrat', sans-serif; background-image: url('image.jpg'); background-size: cover; background-position: center; background-attachment: fixed; overflow: hidden; }
+        .overlay { background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); position: absolute; inset: 0; z-index: -1; }
+        .glass-panel { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(16px); border-right: 1px solid rgba(255, 255, 255, 0.05); border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
+        .glass-card { background: rgba(30, 41, 59, 0.5); border: 1px solid rgba(255, 255, 255, 0.1); }
+        #sidebar { transition: transform 0.3s ease-in-out; }
+        .sidebar-open { transform: translateX(0) !important; }
+        .sidebar-closed { transform: translateX(-100%); }
+        @media (min-width: 768px) { .sidebar-closed { transform: translateX(0); } }
+        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); } ::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.5); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+    </style>
+</head>
+<body class="text-slate-200 h-screen flex relative">
+    <div class="overlay"></div>
+    
+    <div id="toast" class="fixed top-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-xl z-[300] hidden transition-opacity duration-300 font-black text-[10px] uppercase tracking-widest backdrop-blur-md border shadow-2xl"></div>
+    
+    <div id="sidebar-backdrop" onclick="toggleSidebar()" class="fixed inset-0 bg-black/50 z-40 hidden md:hidden"></div>
+
+    <div id="sidebar-placeholder"></div>
+
+    <div class="flex-1 flex flex-col h-full overflow-hidden relative z-10">
+        
+        <div id="header-placeholder" class="shrink-0"></div>
+
+        <div class="flex-1 overflow-y-auto">
+            <main class="min-h-full flex flex-col">
+                
+                <div class="p-4 sm:p-8 w-full max-w-6xl mx-auto flex-1 flex flex-col">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-8 gap-4">
+                        <div>
+                            <h1 class="text-3xl font-bold mb-2 uppercase tracking-tighter italic">Mission Archives</h1>
+                            <p class="text-slate-400">Manage and deploy tactical encryption protocols.</p>
+                        </div>
+                        <button onclick="toggleCreateModal()" class="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-lg text-sm font-bold transition flex items-center shadow-lg shadow-blue-500/20 shrink-0">
+                            <i data-lucide="plus-circle" class="w-4 h-4 mr-2"></i> Create New Mission
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10 shrink-0">
+                        <div class="glass-card rounded-xl p-4 border-blue-500/20 backdrop-blur-md">
+                            <p class="text-[8px] uppercase font-black text-blue-400 tracking-widest mb-1">Missions Deployed</p>
+                            <p id="puz-total-deployed" class="text-xl font-black text-white">0</p>
+                        </div>
+                        <div class="glass-card rounded-xl p-4 border-emerald-500/20 backdrop-blur-md">
+                            <p class="text-[8px] uppercase font-black text-emerald-400 tracking-widest mb-1">Successful Breaches</p>
+                            <p id="puz-total-solves" class="text-xl font-black text-white">0</p>
+                        </div>
+                        <div class="glass-card rounded-xl p-4 border-purple-500/20 backdrop-blur-md">
+                            <p class="text-[8px] uppercase font-black text-purple-400 tracking-widest mb-1">Total Moves Logged</p>
+                            <p id="puz-total-moves" class="text-xl font-black text-white">0</p>
+                        </div>
+                        <div class="glass-card rounded-xl p-4 border-orange-500/20 backdrop-blur-md">
+                            <p class="text-[8px] uppercase font-black text-orange-400 tracking-widest mb-1">Ecosystem Status</p>
+                            <p class="text-xl font-black text-white italic tracking-tighter">ACTIVE</p>
+                        </div>
+                    </div>
+
+                    <div id="puzzles-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 flex-1 content-start"></div>
+                    
+                    <div id="pagination-controls" class="mt-10 mb-4 flex justify-center items-center gap-6 hidden shrink-0"></div>
+                </div>
+                
+                <div id="footer-placeholder" class="mt-auto shrink-0 w-full"></div>
+            </main>
+        </div>
+    </div>
+
+    <div id="delete-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[200] hidden items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="glass-card p-6 sm:p-8 rounded-2xl text-center max-w-sm w-[90%] shadow-2xl border border-red-500/30 relative overflow-hidden transform scale-95 transition-transform duration-300" id="delete-card">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-orange-500"></div>
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-500/20 border border-red-500/30 mb-4">
+                <i data-lucide="alert-triangle" class="w-6 h-6 text-red-500"></i>
+            </div>
+            <h3 class="text-xl font-black text-white uppercase tracking-widest mb-2">Purge Mission?</h3>
+            <p class="text-xs text-slate-400 mb-6 font-semibold leading-relaxed">This action cannot be undone. The protocol, all operative logs, and mission data will be permanently erased.</p>
+            <div class="flex gap-3">
+                <button onclick="closeDeleteModal()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white py-3 rounded-lg font-bold text-xs uppercase tracking-widest transition">Cancel</button>
+                <button onclick="executeDelete()" id="btn-confirm-delete" class="flex-1 bg-red-600 hover:bg-red-500 text-white py-3 rounded-lg font-black text-xs uppercase tracking-widest transition shadow-lg shadow-red-600/20">Purge</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="create-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] hidden items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="glass-card w-full max-w-2xl rounded-2xl border border-blue-500/30 shadow-2xl relative overflow-hidden transform scale-95 transition-transform duration-300" id="create-card">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+            <div class="p-6 sm:p-8">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold flex items-center gap-2 text-white"><i data-lucide="sparkles" class="w-5 h-5 text-blue-400"></i> New Mission Protocol</h3>
+                    <button onclick="toggleCreateModal()" class="text-slate-400 hover:text-white transition"><i data-lucide="x" class="w-5 h-5"></i></button>
+                </div>
+
+                <form id="create-puzzle-form" class="space-y-5">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Game Mode</label>
+                            <select id="p-type" onchange="toggleFormFields()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none transition appearance-none">
+                                <option value="image" selected>Visual Swap (Image Based)</option>
+                                <option value="cipher">Cipher Breach (Text Scramble)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Mission Code Name</label>
+                            <input type="text" id="p-title" required placeholder="E.g. Operation X" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none transition">
+                        </div>
+                        <div id="grid-group">
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Grid Dimension</label>
+                            <select id="p-grid" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none appearance-none">
+                                <option value="3">3x3 (Easy)</option><option value="4" selected>4x4 (Normal)</option><option value="5">5x5 (Hard)</option><option value="6">6x6 (Expert)</option><option value="8">8x8 (Insane)</option><option value="10">10x10 (Impossible)</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Mission Duration</label>
+                            <select id="p-time" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none appearance-none">
+                                <option value="60">1 Minute</option><option value="300" selected>5 Minutes</option><option value="1800">30 Minutes</option><option value="3600">1 Hour</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div id="image-group">
+                        <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Encryption Image</label>
+                        <input type="file" id="p-image" accept="image/*" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-500 cursor-pointer">
+                    </div>
+
+                    <div id="content-group" class="hidden">
+                        <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Secret Key (Target Word)</label>
+                        <input type="text" id="p-content" placeholder="E.g. BREACH SUCCESS" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:border-emerald-500 outline-none transition uppercase">
+                    </div>
+
+                    <div class="pt-4 flex justify-end gap-3 border-t border-white/5">
+                        <button type="button" onclick="toggleCreateModal()" class="bg-slate-700 hover:bg-slate-600 px-6 py-3 rounded-lg text-white font-bold transition">Abort</button>
+                        <button type="submit" id="btn-create" class="bg-blue-600 hover:bg-blue-500 px-8 py-3 rounded-lg text-white font-bold transition shadow-lg">Initiate Deployment</button>
+                    </div>
+                </form>
+
+                <div id="link-result" class="hidden mt-6 p-5 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
+                    <p class="text-emerald-400 text-[10px] font-black uppercase mb-2 tracking-widest">Protocol Live. Deploy Link:</p>
+                    <div class="flex gap-2">
+                        <input type="text" id="share-link" readonly class="w-full bg-black/50 border border-emerald-500/20 text-white rounded p-3 font-mono text-sm outline-none">
+                        <button onclick="copyLink()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-4 rounded font-bold text-sm transition shrink-0">Copy</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="details-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[100] hidden items-center justify-center p-4 opacity-0 transition-opacity duration-300">
+        <div class="glass-card w-full max-w-4xl rounded-2xl border border-white/10 flex flex-col max-h-[90vh] overflow-hidden shadow-2xl relative">
+            <div id="modal-header-bg" class="relative p-6 sm:p-10 shrink-0 bg-cover bg-center border-b border-white/10">
+                <div class="absolute inset-0 bg-slate-900/85 backdrop-blur-sm"></div>
+                <div class="relative z-10 flex flex-col gap-6">
+                    <div class="flex justify-between items-start">
+                        <h2 id="modal-title" class="text-3xl font-black text-white uppercase tracking-tighter italic">Mission Log</h2>
+                        <button onclick="closeDetailsModal()" class="text-white hover:text-red-400 bg-black/40 p-2 rounded-full transition shrink-0"><i data-lucide="x" class="w-6 h-6"></i></button>
+                    </div>
+
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="bg-blue-500/10 border border-blue-500/30 p-3 rounded-xl backdrop-blur-md">
+                            <p class="text-[8px] uppercase font-black text-blue-400 tracking-widest mb-1">Dimension</p>
+                            <p id="modal-grid" class="text-lg font-black text-white italic">--</p>
+                        </div>
+                        <div class="bg-emerald-500/10 border border-emerald-500/30 p-3 rounded-xl backdrop-blur-md">
+                            <p class="text-[8px] uppercase font-black text-emerald-400 tracking-widest mb-1">Breaches</p>
+                            <p id="modal-plays" class="text-lg font-black text-white italic">0</p>
+                        </div>
+                        <div class="bg-orange-500/10 border border-orange-500/30 p-3 rounded-xl backdrop-blur-md">
+                            <p class="text-[8px] uppercase font-black text-orange-400 tracking-widest mb-1">Avg Moves</p>
+                            <p id="modal-total-moves" class="text-lg font-black text-white italic">0</p>
+                        </div>
+                        <div class="bg-purple-500/10 border border-purple-500/30 p-3 rounded-xl backdrop-blur-md">
+                            <p class="text-[8px] uppercase font-black text-purple-400 tracking-widest mb-1">Fastest Time</p>
+                            <p id="modal-avg-time" class="text-lg font-black text-white italic">0s</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="overflow-y-auto p-6 bg-black/40 custom-scrollbar flex-1">
+                <table class="w-full text-left text-sm text-slate-300">
+                    <thead class="text-xs text-slate-400 uppercase bg-black/60 font-black tracking-widest border-b border-white/5">
+                        <tr><th class="px-6 py-4">Operative</th><th class="px-6 py-4">Moves</th><th class="px-6 py-4">Time</th><th class="px-6 py-4 text-right">Breach Date</th></tr>
+                    </thead>
+                    <tbody id="modal-table-body" class="divide-y divide-white/5"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPuzzles = [];
+        const itemsPerPage = 10;
+        let currentPage = 1;
+        let puzzleToDelete = null; // State for custom delete
+        const userStr = localStorage.getItem('cinematic_user');
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            if (!userStr) return window.location.href = '/index.html';
+            await loadComponent('sidebar-placeholder', '/components/sidebar.html');
+            await loadComponent('header-placeholder', '/components/header.html');
+            await loadComponent('footer-placeholder', '/components/footer.html');
+            lucide.createIcons();
+            
+            const nav = document.getElementById('nav-puzzles');
+            if(nav) nav.className = "w-full flex items-center px-4 py-3 rounded-lg bg-blue-600/20 text-blue-400 border border-blue-500/30 transition-all";
+            
+            const user = JSON.parse(userStr);
+            document.getElementById('header-name').textContent = user.name || user.email.split('@')[0];
+            document.getElementById('dd-name').textContent = user.name || user.email.split('@')[0];
+            document.getElementById('dd-email').textContent = user.email;
+            
+            loadPuzzles(user.email);
+            document.getElementById('create-puzzle-form').addEventListener('submit', handleCreatePuzzle);
+        });
+
+        async function loadComponent(id, path) { try { const res = await fetch(path); if(res.ok) document.getElementById(id).outerHTML = await res.text(); } catch(e){} }
+
+        function showToast(msg, isSuccess = false) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.className = `fixed top-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-xl z-[300] transition-opacity duration-300 font-black text-[10px] uppercase tracking-widest backdrop-blur-md border ${isSuccess ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-red-500/20 text-red-400 border-red-500/30'} shadow-2xl`;
+            toast.classList.remove('hidden', 'opacity-0');
+            setTimeout(() => { toast.classList.add('opacity-0'); setTimeout(() => toast.classList.add('hidden'), 300); }, 3000);
+        }
+
+        function toggleFormFields() {
+            const type = document.getElementById('p-type').value;
+            const imgGroup = document.getElementById('image-group');
+            const contentGroup = document.getElementById('content-group');
+            const gridGroup = document.getElementById('grid-group');
+
+            if(type === 'image') {
+                imgGroup.classList.remove('hidden');
+                gridGroup.classList.remove('hidden');
+                contentGroup.classList.add('hidden');
+            } else {
+                imgGroup.classList.add('hidden');
+                gridGroup.classList.add('hidden');
+                contentGroup.classList.remove('hidden');
+            }
+        }
+
+        async function loadPuzzles(email) {
+            try {
+                const res = await fetch(`/api/dashboard/${email}`);
+                const data = await res.json();
+                currentPuzzles = data.puzzles;
+                
+                // Update Global Metrics
+                let totalSolves = 0, totalMoves = 0;
+                currentPuzzles.forEach(p => { totalSolves += p.plays.length; p.plays.forEach(pl => totalMoves += pl.moves); });
+                document.getElementById('puz-total-deployed').innerText = currentPuzzles.length;
+                document.getElementById('puz-total-solves').innerText = totalSolves;
+                document.getElementById('puz-total-moves').innerText = totalMoves;
+
+                renderPuzzlePage(1);
+            } catch (err) { console.error(err); }
+        }
+
+        // --- PAGINATION LOGIC ---
+        function renderPuzzlePage(page) {
+            currentPage = page;
+            const container = document.getElementById('puzzles-container');
+            container.innerHTML = ''; 
+
+            const totalPages = Math.ceil(currentPuzzles.length / itemsPerPage);
+            const startIdx = (page - 1) * itemsPerPage;
+            const endIdx = startIdx + itemsPerPage;
+            const paginatedPuzzles = currentPuzzles.slice(startIdx, endIdx);
+
+            if (currentPuzzles.length === 0) {
+                container.innerHTML = `<div class="col-span-full py-16 flex flex-col items-center justify-center text-slate-500"><i data-lucide="grid" class="w-12 h-12 mb-4 opacity-50"></i><p class="font-bold italic uppercase tracking-widest text-xs">No missions deployed yet.</p></div>`;
+            } else {
+                paginatedPuzzles.forEach(p => {
+                    let st = p.plays.slice(0, 5).map((pl, i) => `<div class="flex justify-between text-[11px] py-1.5"><span class="font-bold text-white uppercase truncate pr-2">${pl.player_name}</span><span class="shrink-0 text-blue-400 font-bold">${pl.moves}mv</span></div>`).join('') || '<p class="text-[9px] text-slate-600 py-3 text-center font-bold uppercase tracking-widest">Awaiting Breach Success</p>';
+                    const plLink = `${window.location.origin}/play.html?id=${p.id}`;
+                    const thumb = p.type === 'image' ? p.image_url : 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=400';
+                    
+                    container.innerHTML += `
+                    <div class="glass-card rounded-xl overflow-hidden flex flex-col border border-white/10 hover:border-blue-500/50 transition duration-300 relative group/card">
+                        <button onclick="deletePuzzle('${p.id}')" class="absolute top-3 right-3 bg-red-600 hover:bg-red-500 text-white p-2 rounded-lg z-20 opacity-0 group-hover/card:opacity-100 transition shadow-lg"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        <div class="h-44 bg-cover bg-center relative group shrink-0" style="background-image: url('${thumb}')">
+                            <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center z-10 backdrop-blur-sm"><a href="${plLink}" target="_blank" class="bg-blue-600 text-white text-[10px] font-black px-4 py-2 rounded uppercase tracking-widest">Launch Breach</a></div>
+                            <span class="absolute top-3 left-3 bg-black/80 text-white text-[8px] font-black px-2 py-0.5 rounded uppercase z-10 border border-white/10 italic">${p.type === 'image' ? p.grid_size + 'x' + p.grid_size : 'CIPHER'}</span>
+                        </div>
+                        <div class="p-5 flex-1 flex flex-col bg-slate-900/40">
+                            <h3 class="font-black text-sm text-white uppercase truncate mb-4 italic tracking-tight">${p.title}</h3>
+                            <div class="flex-1 bg-black/30 border border-white/5 rounded-lg mb-4 px-3 custom-scrollbar overflow-y-auto max-h-32">${st}</div>
+                            <button onclick="openDetailsModal('${p.id}')" class="w-full bg-blue-600/10 hover:bg-blue-600 border border-blue-500/20 hover:border-blue-500 text-blue-400 hover:text-white text-[10px] font-black py-2.5 rounded transition uppercase tracking-widest">Protocol Logs</button>
+                        </div>
+                    </div>`;
+                });
+            }
+            lucide.createIcons();
+            renderPaginationControls(totalPages);
+        }
+
+        function renderPaginationControls(totalPages) {
+            const paginationDiv = document.getElementById('pagination-controls');
+            if (totalPages <= 1) {
+                paginationDiv.classList.add('hidden');
+                return;
+            }
+            
+            paginationDiv.classList.remove('hidden');
+            
+            const prevDisabled = currentPage === 1;
+            const nextDisabled = currentPage === totalPages;
+
+            paginationDiv.innerHTML = `
+                <button onclick="renderPuzzlePage(${currentPage - 1})" ${prevDisabled ? 'disabled' : ''} class="flex items-center px-4 py-2 rounded-lg font-black text-[10px] uppercase tracking-widest transition-all ${prevDisabled ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white'}">
+                    <i data-lucide="chevron-left" class="w-4 h-4 mr-1"></i> Prev
+                </button>
+                <span class="text-slate-400 font-bold text-[10px] uppercase tracking-widest">Page ${currentPage} / ${totalPages}</span>
+                <button onclick="renderPuzzlePage(${currentPage + 1})" ${nextDisabled ? 'disabled' : ''} class="flex items-center px-4 py-2 rounded-lg font-black text-[10px] uppercase tracking-widest transition-all ${nextDisabled ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white'}">
+                    Next <i data-lucide="chevron-right" class="w-4 h-4 ml-1"></i>
+                </button>
+            `;
+            lucide.createIcons();
+        }
+
+        async function handleCreatePuzzle(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-create');
+            btn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 animate-spin"></i> Encrypting...'; 
+            btn.disabled = true; lucide.createIcons();
+
+            const fd = new FormData();
+            fd.append('creator_email', JSON.parse(userStr).email);
+            fd.append('title', document.getElementById('p-title').value);
+            fd.append('type', document.getElementById('p-type').value);
+            fd.append('grid_size', document.getElementById('p-grid').value);
+            fd.append('time_limit', document.getElementById('p-time').value);
+            
+            if(document.getElementById('p-type').value === 'image') {
+                fd.append('image', document.getElementById('p-image').files[0]);
+            } else {
+                fd.append('content', document.getElementById('p-content').value);
+            }
+
+            try {
+                const res = await fetch('/api/puzzles', { method: 'POST', body: fd });
+                const d = await res.json();
+                if(d.success) {
+                    showToast("Deployment Success!", true);
+                    document.getElementById('create-puzzle-form').reset();
+                    toggleFormFields(); 
+                    document.getElementById('link-result').classList.remove('hidden');
+                    document.getElementById('share-link').value = d.link;
+                    loadPuzzles(JSON.parse(userStr).email); 
+                } else showToast(d.error);
+            } catch (err) { showToast("Comm Error."); } finally { btn.innerHTML = 'Initiate Deployment'; btn.disabled = false; lucide.createIcons(); }
+        }
+
+        // --- CUSTOM DELETE LOGIC ---
+        function deletePuzzle(id) {
+            puzzleToDelete = id;
+            const modal = document.getElementById('delete-modal');
+            const card = document.getElementById('delete-card');
+            modal.classList.replace('hidden', 'flex');
+            setTimeout(() => { modal.classList.remove('opacity-0'); card.classList.remove('scale-95'); }, 10);
+        }
+
+        function closeDeleteModal() {
+            const modal = document.getElementById('delete-modal');
+            const card = document.getElementById('delete-card');
+            modal.classList.add('opacity-0');
+            card.classList.add('scale-95');
+            setTimeout(() => { modal.classList.replace('flex', 'hidden'); puzzleToDelete = null; }, 300);
+        }
+
+        async function executeDelete() {
+            if(!puzzleToDelete) return;
+            const btn = document.getElementById('btn-confirm-delete');
+            btn.innerHTML = '<i data-lucide="loader" class="w-4 h-4 animate-spin inline-block mr-2"></i> Purging...';
+            btn.disabled = true;
+            lucide.createIcons();
+
+            try {
+                const res = await fetch(`/api/puzzle/${puzzleToDelete}`, { method: 'DELETE' });
+                if((await res.json()).success) { 
+                    showToast("Mission Purged", true); 
+                    loadPuzzles(JSON.parse(userStr).email); 
+                }
+            } catch(e) {
+                showToast("Comm Error.");
+            } finally {
+                closeDeleteModal();
+                btn.innerHTML = 'Purge';
+                btn.disabled = false;
+            }
+        }
+
+        function openDetailsModal(id) {
+            const p = currentPuzzles.find(x => x.id === id); if(!p) return;
+            
+            let tMoves = 0, bestTime = p.plays.length ? Infinity : 0;
+            p.plays.forEach(pl => { 
+                tMoves += pl.moves; 
+                if(pl.time_seconds < bestTime) bestTime = pl.time_seconds; 
+            });
+            let avgMoves = p.plays.length ? Math.round(tMoves / p.plays.length) : 0;
+
+            document.getElementById('modal-title').textContent = p.title;
+            document.getElementById('modal-grid').textContent = p.type === 'image' ? `${p.grid_size}x${p.grid_size}` : 'N/A';
+            document.getElementById('modal-plays').textContent = p.plays.length;
+            document.getElementById('modal-total-moves').textContent = avgMoves;
+            document.getElementById('modal-avg-time').textContent = (bestTime === Infinity ? 0 : bestTime) + 's';
+            
+            const thumb = p.type === 'image' ? p.image_url : 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&q=80&w=600';
+            document.getElementById('modal-header-bg').style.backgroundImage = `url('${thumb}')`;
+
+            const tbody = document.getElementById('modal-table-body');
+            tbody.innerHTML = p.plays.length ? p.plays.map(pl => `<tr><td class="px-6 py-4 font-bold text-white uppercase truncate max-w-[150px]">${pl.player_name}</td><td class="px-6 py-4 text-emerald-400 font-bold">${pl.moves}</td><td class="px-6 py-4 text-blue-400 font-bold">${pl.time_seconds}s</td><td class="px-6 py-4 text-right text-[10px] opacity-40 font-bold uppercase tracking-tighter">${new Date(pl.played_at).toLocaleDateString()}</td></tr>`).join('') : `<tr><td colspan="4" class="px-6 py-12 text-center text-slate-500 font-bold italic">No operative activity logged.</td></tr>`;
+            
+            const m = document.getElementById('details-modal'); m.classList.replace('hidden', 'flex'); setTimeout(() => m.classList.remove('opacity-0'), 10);
+            lucide.createIcons();
+        }
+
+        function closeDetailsModal() { const m = document.getElementById('details-modal'); m.classList.add('opacity-0'); setTimeout(() => m.classList.replace('flex', 'hidden'), 300); }
+        function toggleCreateModal() { const m = document.getElementById('create-modal'); const c = document.getElementById('create-card'); if(m.classList.contains('hidden')){ document.getElementById('create-puzzle-form').reset(); toggleFormFields(); document.getElementById('link-result').classList.add('hidden'); m.classList.replace('hidden', 'flex'); setTimeout(()=>{m.classList.remove('opacity-0');c.classList.remove('scale-95');},10); } else { m.classList.add('opacity-0'); c.classList.add('scale-95'); setTimeout(()=>m.classList.replace('flex','hidden'),300); } }
+        function copyLink() { document.getElementById('share-link').select(); document.execCommand('copy'); showToast("Link Copied!", true); }
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('sidebar-closed'); document.getElementById('sidebar').classList.toggle('sidebar-open'); document.getElementById('sidebar-backdrop').classList.toggle('hidden'); }
+        
+        function toggleProfileDropdown() { 
+            const dd = document.getElementById('profile-dropdown'); 
+            if (!dd) return;
+            if (dd.classList.contains('hidden')) {
+                dd.classList.remove('hidden'); 
+                setTimeout(() => { dd.classList.remove('opacity-0', 'scale-95'); }, 10); 
+            } else {
+                dd.classList.add('opacity-0', 'scale-95'); 
+                setTimeout(() => { dd.classList.add('hidden'); }, 300); 
+            }
+        }
+        
+        function logout() { localStorage.removeItem('cinematic_user'); window.location.href = '/index.html'; }
+    </script>
+</body>
+</html>

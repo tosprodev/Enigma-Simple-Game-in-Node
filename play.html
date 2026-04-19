@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0a0b10">
+    
+    <title>Play Enigma - Tactical Challenge</title>
+    <meta name="description" content="Engage in the Enigma Tactical Challenge. Solve the visual or cipher puzzle before the mission window expires.">
+    <meta name="author" content="Md Kaif">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Fira+Code:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Montserrat', sans-serif; background: #0a0b10; color: white; overflow-x: hidden; touch-action: manipulation; }
+        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+        
+        /* UNIFIED PIECE STYLES */
+        .piece { 
+            position: absolute; 
+            border: 0.5px solid rgba(0,0,0,0.5); 
+            cursor: pointer; 
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s, border-color 0.3s, color 0.3s; 
+            background-repeat: no-repeat; 
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.3); 
+            user-select: none; -webkit-user-select: none;
+            touch-action: none;
+        }
+        
+        .piece.selected { border: 2px solid #3b82f6; box-shadow: 0 0 25px #3b82f6, inset 0 0 10px #3b82f6; z-index: 50 !important; }
+        .piece.dragging { z-index: 1000 !important; box-shadow: 0 15px 35px rgba(0,0,0,0.6) !important; opacity: 0.95; }
+
+        /* CIPHER SPECIFIC STYLES */
+        .char-piece { 
+            display: flex; align-items: center; justify-content: center; 
+            font-family: 'Fira Code', monospace; font-weight: 900; font-size: 2.2rem;
+            color: #60a5fa; background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 8px;
+            text-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+        }
+        
+        /* 🟢 THE TACTICAL GREEN EFFECT FOR CORRECT CIPHER LETTERS */
+        .char-piece.correct-pos {
+            border-color: #10b981 !important;
+            color: #10b981 !important;
+            background: rgba(16, 185, 129, 0.1);
+            box-shadow: inset 0 0 15px rgba(16, 185, 129, 0.2), 0 0 10px rgba(16, 185, 129, 0.3) !important;
+            text-shadow: 0 0 15px rgba(16, 185, 129, 0.6) !important;
+        }
+
+        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.94); display: flex; align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(10px); }
+        #board-container { width: 92vw; max-width: 600px; aspect-ratio: 1 / 1; margin: 0 auto; touch-action: none; position: relative; }
+        
+        .timer-danger { color: #ef4444; animation: timerShake 0.5s infinite; }
+        @keyframes timerShake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-2px); } 75% { transform: translateX(2px); } }
+        
+        .hint-img { filter: grayscale(100%) blur(2px) brightness(0.9); max-width: 85vw; max-height: 65vh; border-radius: 16px; border: 2px solid rgba(255,255,255,0.3); }
+        .pulse-win { animation: winPulse 2s infinite; }
+        @keyframes winPulse { 0%, 100% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); border-color: rgba(16, 185, 129, 0.5); } 50% { box-shadow: 0 0 60px rgba(16, 185, 129, 0.8); border-color: rgba(16, 185, 129, 1); } }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center pt-2 sm:pt-6 relative">
+
+    <div id="toast" class="fixed top-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-xl shadow-2xl z-[300] hidden transition-opacity duration-300 font-black text-[10px] uppercase tracking-widest backdrop-blur-md border border-white/10"></div>
+
+    <div id="name-modal" class="overlay">
+        <div class="glass p-8 sm:p-12 rounded-3xl text-center max-w-sm w-[90%] shadow-2xl border border-blue-500/30 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+            <h2 id="puzzle-title-display" class="text-2xl font-black mb-1 text-white uppercase tracking-tighter leading-none italic">Scanning...</h2>
+            <p id="creator-display" class="text-[9px] text-blue-400 mb-8 font-bold uppercase tracking-[0.2em]">Verification Required</p>
+            
+            <div class="bg-black/30 p-4 rounded-2xl mb-6 border border-white/5">
+                <p class="text-[10px] text-slate-500 font-black uppercase mb-1 tracking-tighter">Mission Window</p>
+                <p id="modal-timer-display" class="text-xl font-black text-white italic">--:--</p>
+            </div>
+
+            <input type="text" id="player-name" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-4 mb-4 text-white focus:border-blue-500 transition text-center font-bold outline-none" placeholder="Your Name">
+            
+            <div class="space-y-3">
+                <button onclick="startGame()" id="btn-start-game" disabled class="w-full bg-slate-700 text-slate-400 py-4 rounded-xl font-black uppercase tracking-widest transition cursor-not-allowed">Loading Data...</button>
+                <button onclick="window.location.href='/index.html'" class="w-full bg-white/5 hover:bg-white/10 text-slate-400 py-3 rounded-xl font-bold transition text-[10px] uppercase flex justify-center items-center tracking-widest">
+                    <i data-lucide="plus" class="w-3.5 h-3.5 mr-2 text-blue-400"></i> Join The Grid
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="w-full max-w-2xl mt-2 sm:mt-4 z-10 flex flex-col gap-3 px-2">
+        <div class="flex justify-between items-center px-1">
+            <div class="max-w-[65%]">
+                <h1 id="ui-title" class="text-base sm:text-xl font-black tracking-tighter text-white uppercase truncate">---</h1>
+                <p id="ui-creator" class="text-[9px] text-blue-400 font-bold uppercase tracking-widest opacity-70">---</p>
+            </div>
+            <button id="hint-btn" onclick="toggleHint()" class="bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-500 px-3 py-1.5 rounded-full text-[9px] font-black uppercase transition flex items-center gap-2">
+                <i data-lucide="eye" class="w-3 h-3"></i> Hint (<span id="hint-count">5</span>)
+            </button>
+        </div>
+
+        <div class="flex gap-2 glass p-3 rounded-2xl border border-white/10 shadow-2xl">
+            <div class="flex-1 text-center border-r border-white/5">
+                <p class="text-[8px] text-gray-500 font-black uppercase tracking-tighter">Actions</p>
+                <p id="moves" class="stat-val font-black text-xl text-white">0</p>
+            </div>
+            <div class="flex-1 text-center">
+                <p class="text-[8px] text-gray-500 font-black uppercase tracking-tighter">Time Status</p>
+                <p id="time" class="stat-val font-black text-xl text-blue-400">00:00</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4 sm:mt-6 z-10 w-full px-2">
+        <div id="board-container">
+            <div id="board" class="w-full h-full glass rounded-2xl relative overflow-hidden border border-white/10"></div>
+        </div>
+    </div>
+
+    <footer class="mt-auto w-full py-5 text-center text-[10px] sm:text-xs font-bold text-slate-500 tracking-widest uppercase z-10 border-t border-white/5 bg-black/40 backdrop-blur-sm relative bottom-0">
+        Developed By <span class="text-blue-500">Md Kaif</span> 
+        <span class="mx-2 opacity-50">|</span> 
+        <a href="/index.html" class="text-emerald-400 hover:text-emerald-300 transition-colors underline underline-offset-4">Create Puzzle Here</a>
+    </footer>
+
+    <div id="hint-modal" class="overlay hidden opacity-0 transition-opacity duration-300" onclick="toggleHint()">
+        <div class="relative flex flex-col items-center">
+            <p class="mb-4 text-[10px] font-black uppercase tracking-[0.4em] text-amber-400">Memory Buffer</p>
+            <img id="hint-img" src="" class="hint-img">
+            <p id="hint-text" class="mt-8 text-blue-400 text-3xl font-black font-mono hidden uppercase tracking-widest shadow-2xl bg-black/50 px-6 py-3 rounded-xl border border-blue-500/30"></p>
+            <p class="mt-8 text-slate-500 text-[9px] font-black tracking-widest">CLICK TO RESUME MISSION</p>
+        </div>
+    </div>
+
+    <div id="end-modal" class="overlay hidden opacity-0 transition-all duration-500">
+        <div class="glass p-8 rounded-[2rem] text-center max-w-md w-[92%] shadow-2xl border relative overflow-hidden transform scale-95 transition-transform duration-500" id="end-card">
+            <div id="status-icon" class="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 border"></div>
+            <h2 id="end-title" class="text-3xl font-black mb-1 uppercase tracking-tighter italic">---</h2>
+            <p id="end-subtitle" class="text-slate-400 text-[10px] mb-8 uppercase font-bold tracking-[0.2em]">Puzzle by <span id="v-creator-name" class="text-white">---</span></p>
+            
+            <div class="grid grid-cols-2 gap-4 mb-8">
+                <div class="bg-black/50 p-4 rounded-2xl border border-white/5">
+                    <p class="text-[8px] text-gray-500 font-black uppercase mb-1">Final Score</p>
+                    <p id="v-moves" class="text-2xl font-black text-white">0</p>
+                </div>
+                <div class="bg-black/50 p-4 rounded-2xl border border-white/5">
+                    <p class="text-[8px] text-gray-500 font-black uppercase mb-1">Time Log</p>
+                    <p id="v-time" class="text-2xl font-black text-blue-400">---</p>
+                </div>
+            </div>
+
+            <div id="failure-cta" class="hidden">
+                <button onclick="window.location.reload()" class="w-full bg-red-600 hover:bg-red-500 py-4 rounded-xl font-black uppercase text-xs transition active:scale-95 shadow-lg shadow-red-900/20 mb-4">Re-Attempt Breach</button>
+            </div>
+
+            <div id="success-cta" class="hidden">
+                <form id="creator-form" class="space-y-4 mb-4">
+                    <input type="email" id="reg-email" required class="w-full bg-slate-900/60 border border-slate-700 rounded-xl p-4 text-white text-sm focus:border-emerald-500 outline-none transition font-bold" placeholder="Your Email Address">
+                    <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 py-4 rounded-xl font-black uppercase tracking-widest text-[11px]">Deploy Personal Grid</button>
+                </form>
+                <button onclick="window.location.reload()" class="text-slate-500 hover:text-white text-[10px] font-black uppercase transition tracking-[0.3em]">Restart Protocol</button>
+            </div>
+            
+            <button onclick="window.location.href='/index.html'" class="mt-2 text-slate-500 hover:text-white text-[9px] font-black uppercase transition tracking-[0.3em]">Exit Protocol</button>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        const urlParams = new URLSearchParams(window.location.search);
+        const puzzleId = urlParams.get('id');
+        
+        let puzzleData = null, playerName = "", timerInterval, secondsRemaining = 0, moves = 0, pieces = [], hintsLeft = 5, isGameOver = false;
+        
+        // Drag & Drop State
+        let draggedPiece = null;
+        let selected = null;
+        let isDragging = false;
+        let startX = 0, startY = 0;
+
+        function showToast(msg, isSuccess = false) {
+            const toast = document.getElementById('toast');
+            toast.innerText = msg;
+            toast.className = `fixed top-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-xl z-[300] transition-opacity duration-300 font-black text-[10px] uppercase tracking-widest backdrop-blur-md border ${isSuccess ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' : 'bg-red-500/20 text-red-400 border-red-500/30'}`;
+            toast.classList.remove('hidden', 'opacity-0');
+            setTimeout(() => { toast.classList.add('opacity-0'); setTimeout(() => toast.classList.add('hidden'), 300); }, 3000);
+        }
+
+        if(puzzleId) {
+            fetch(`/api/puzzle/${puzzleId}`)
+                .then(res => res.json())
+                .then(data => {
+                    if(data.error) return showToast("Mission data corrupted.");
+                    puzzleData = data;
+                    secondsRemaining = parseInt(data.time_limit) || 300; 
+                    
+                    document.getElementById('puzzle-title-display').innerText = data.title;
+                    document.getElementById('ui-title').innerText = data.title;
+                    document.getElementById('creator-display').innerText = `Encrypted by ${data.creator_name}`;
+                    document.getElementById('ui-creator').innerText = `Shared By: ${data.creator_name}`;
+                    document.getElementById('v-creator-name').innerText = data.creator_name;
+                    
+                    if(data.type === 'cipher') {
+                        document.getElementById('hint-img').classList.add('hidden');
+                        document.getElementById('hint-text').innerText = data.content;
+                        document.getElementById('hint-text').classList.remove('hidden');
+                    } else {
+                        document.getElementById('hint-img').src = data.image_url;
+                    }
+
+                    updateTimerDisplay();
+                    const totalMins = Math.floor(secondsRemaining / 60);
+                    const remainingSecs = secondsRemaining % 60;
+                    document.getElementById('modal-timer-display').innerText = totalMins >= 60 ? "01:00:00 HOUR" : `${totalMins.toString().padStart(2, '0')}:${remainingSecs.toString().padStart(2, '0')} MINS`;
+
+                    const startBtn = document.getElementById('btn-start-game');
+                    startBtn.innerText = "Initiate Breach";
+                    startBtn.disabled = false;
+                    startBtn.className = "w-full bg-blue-600 hover:bg-blue-500 py-4 rounded-xl font-black uppercase tracking-widest transition active:scale-95 shadow-lg shadow-blue-500/20";
+
+                    let savedName = localStorage.getItem('enigma_player_name');
+                    if(savedName) document.getElementById('player-name').value = savedName;
+                });
+        }
+
+        function startGame() {
+            playerName = document.getElementById('player-name').value.trim();
+            if (!playerName) return showToast("Identity check required.");
+            localStorage.setItem('enigma_player_name', playerName);
+            document.getElementById('name-modal').classList.add('hidden');
+            buildUnifiedBoard();
+        }
+
+        // --- THE UNIFIED BOARD BUILDER (Handles both Image and Cipher) ---
+        function buildUnifiedBoard() {
+            const board = document.getElementById('board');
+            let size, textStr;
+            
+            if (puzzleData.type === 'cipher') {
+                const content = puzzleData.content.toUpperCase();
+                size = Math.ceil(Math.sqrt(content.length));
+                // Pad with spaces to fill the grid perfectly
+                textStr = content.padEnd(size * size, ' ');
+            } else {
+                size = puzzleData.grid_size;
+            }
+            
+            const pct = 100 / size;
+            
+            for (let r = 0; r < size; r++) {
+                for (let c = 0; c < size; c++) {
+                    let p = document.createElement('div');
+                    p.className = puzzleData.type === 'cipher' ? 'piece char-piece' : 'piece';
+                    p.style.width = p.style.height = `${pct}%`;
+                    
+                    let obj = { dom: p, cr: r, cc: c, curR: r, curC: c, rot: 0 };
+                    
+                    if (puzzleData.type === 'cipher') {
+                        const char = textStr[r * size + c];
+                        p.textContent = char.trim() === '' ? '' : char; // Render space as blank block
+                    } else {
+                        p.style.backgroundImage = `url(${puzzleData.image_url})`;
+                        p.style.backgroundSize = `${size * 100}% ${size * 100}%`;
+                        p.style.backgroundPosition = `${(c/(size-1))*100}% ${(r/(size-1))*100}%`;
+                    }
+
+                    setupInteraction(p, obj);
+                    pieces.push(obj);
+                    board.appendChild(p);
+                }
+            }
+            shuffle();
+            startCountdown();
+        }
+
+        // --- HYBRID INPUT LOGIC (Drag & Drop + Tap) ---
+        function setupInteraction(p, obj) {
+            p.lastTap = 0;
+            
+            p.addEventListener('pointerdown', (e) => {
+                if(isGameOver) return;
+                
+                // Desktop Right Click Rotate (Images Only)
+                if(e.button === 2 && puzzleData.type !== 'cipher') { handleRotate(obj); return; }
+                
+                // Mobile Double Tap Rotate (Images Only)
+                const now = Date.now();
+                if (now - p.lastTap < 300 && puzzleData.type !== 'cipher') { 
+                    handleRotate(obj); p.lastTap = 0; return; 
+                }
+                p.lastTap = now;
+
+                // Setup for possible Drag
+                draggedPiece = obj;
+                isDragging = false;
+                startX = e.clientX;
+                startY = e.clientY;
+                p.style.zIndex = 100;
+            });
+            p.oncontextmenu = (e) => e.preventDefault();
+        }
+
+        // Global Move (Dragging)
+        document.addEventListener('pointermove', (e) => {
+            if (!draggedPiece || isGameOver) return;
+            
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
+            
+            // Threshold to switch from Tap to Drag
+            if (!isDragging && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
+                isDragging = true;
+                draggedPiece.dom.classList.add('dragging');
+                draggedPiece.dom.style.transition = 'none'; // Disable snapping animation
+                if (selected) { selected.dom.classList.remove('selected'); selected = null; }
+            }
+
+            if (isDragging) {
+                const baseScale = puzzleData.type === 'cipher' ? 'scale(0.92)' : 'scale(1.05)';
+                draggedPiece.dom.style.transform = `translate(${dx}px, ${dy}px) rotate(${draggedPiece.rot || 0}deg) ${baseScale}`;
+            }
+        });
+
+        // Global Release (Drop or Tap)
+        document.addEventListener('pointerup', (e) => {
+            if (isGameOver) return;
+
+            // Clear Selection if clicking blank background
+            if (!draggedPiece && selected && !e.target.closest('.piece')) {
+                selected.dom.classList.remove('selected');
+                selected = null;
+                return;
+            }
+
+            if (!draggedPiece) return;
+
+            if (isDragging) {
+                // DROP LOGIC
+                draggedPiece.dom.style.visibility = 'hidden';
+                let elemBelow = document.elementFromPoint(e.clientX, e.clientY);
+                draggedPiece.dom.style.visibility = 'visible';
+                
+                let targetPieceDom = elemBelow ? elemBelow.closest('.piece') : null;
+                
+                if (targetPieceDom && targetPieceDom !== draggedPiece.dom) {
+                    let targetObj = pieces.find(p => p.dom === targetPieceDom);
+                    if (targetObj) swapPieces(draggedPiece, targetObj);
+                }
+                
+                // Reset styles
+                draggedPiece.dom.classList.remove('dragging');
+                draggedPiece.dom.style.transition = ''; 
+                draggedPiece.dom.style.zIndex = '';
+                render(); 
+            } else {
+                // TAP LOGIC
+                draggedPiece.dom.style.zIndex = '';
+                handleSelect(draggedPiece);
+            }
+
+            draggedPiece = null;
+            isDragging = false;
+        });
+
+        function handleSelect(p) {
+            if(!selected) { 
+                selected = p; 
+                p.dom.classList.add('selected'); 
+                p.dom.style.transform = `rotate(${p.rot || 0}deg) ${puzzleData.type === 'cipher' ? 'scale(1)' : 'scale(1.05)'}`;
+            }
+            else if(selected === p) { 
+                selected = null; 
+                p.dom.classList.remove('selected'); 
+                render();
+            }
+            else {
+                swapPieces(p, selected);
+                selected.dom.classList.remove('selected'); 
+                selected = null;
+            }
+        }
+
+        function swapPieces(p1, p2) {
+            [p1.curC, p2.curC] = [p2.curC, p1.curC];
+            [p1.curR, p2.curR] = [p2.curR, p1.curR];
+            moves++; document.getElementById('moves').innerText = moves;
+            render();
+            setTimeout(checkWin, 350);
+        }
+
+        function handleRotate(p) {
+            p.rot += 90; moves++; document.getElementById('moves').innerText = moves;
+            render(); setTimeout(checkWin, 350);
+        }
+
+        // --- RENDER ENGINE WITH GREEN EFFECT ---
+        function render() {
+            const size = puzzleData.type === 'cipher' ? Math.ceil(Math.sqrt(puzzleData.content.length)) : puzzleData.grid_size;
+            const pct = 100 / size;
+            
+            pieces.forEach(p => {
+                p.dom.style.left = `${p.curC * pct}%`;
+                p.dom.style.top = `${p.curR * pct}%`;
+                
+                let t = `rotate(${p.rot || 0}deg)`;
+                
+                if (puzzleData.type === 'cipher') {
+                    t += ` scale(0.92)`; // Adds a visual gap between blocks
+                    
+                    // GREEN TACTICAL EFFECT
+                    if (p.curC === p.cc && p.curR === p.cr && p.dom.textContent !== '') {
+                        p.dom.classList.add('correct-pos');
+                        t += ` scale(0.96)`; // Slightly pop out correct letters
+                    } else {
+                        p.dom.classList.remove('correct-pos');
+                    }
+                }
+                
+                // Don't override transform if it's currently selected
+                if(selected !== p) p.dom.style.transform = t;
+            });
+        }
+
+        function shuffle() {
+            for (let i = pieces.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [pieces[i].curC, pieces[j].curC] = [pieces[j].curC, pieces[i].curC];
+                [pieces[i].curR, pieces[j].curR] = [pieces[j].curR, pieces[i].curR];
+            }
+            if(puzzleData.type !== 'cipher') {
+                pieces.forEach(p => p.rot = Math.floor(Math.random() * 4) * 90);
+            }
+            render();
+        }
+
+        function startCountdown() {
+            timerInterval = setInterval(() => { 
+                secondsRemaining--; 
+                updateTimerDisplay();
+                if(secondsRemaining <= 0) handleTimeout();
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const m = Math.floor(secondsRemaining / 60).toString().padStart(2, '0');
+            const s = (secondsRemaining % 60).toString().padStart(2, '0');
+            const el = document.getElementById('time');
+            el.innerText = `${m}:${s}`; 
+            if(secondsRemaining <= 30) el.classList.add('timer-danger');
+        }
+
+        function toggleHint() {
+            if(isGameOver) return;
+            const modal = document.getElementById('hint-modal');
+            if(modal.classList.contains('hidden')) {
+                if(hintsLeft <= 0) return showToast("Intel depleted.");
+                hintsLeft--; document.getElementById('hint-count').innerText = hintsLeft;
+                modal.classList.replace('hidden', 'flex'); setTimeout(() => modal.classList.add('opacity-100'), 10);
+            } else {
+                modal.classList.remove('opacity-100'); setTimeout(() => modal.classList.replace('flex', 'hidden'), 300);
+            }
+        }
+
+        function handleTimeout() {
+            isGameOver = true; clearInterval(timerInterval);
+            document.getElementById('board').style.opacity = "0.3";
+            fetch('/api/record-play', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ puzzle_id: puzzleId, player_name: playerName + " (FAILED)", moves, time_seconds: parseInt(puzzleData.time_limit) }) });
+            showEndModal(false);
+        }
+
+        function checkWin() {
+            // Because cipher uses physical grid spots now, win check is identical for both!
+            let win = pieces.every(p => p.curC === p.cc && p.curR === p.cr && p.rot % 360 === 0);
+            
+            if (win && !isGameOver) {
+                isGameOver = true; clearInterval(timerInterval);
+                document.getElementById('board').classList.add('pulse-win');
+                const spent = (parseInt(puzzleData.time_limit) || 300) - secondsRemaining;
+                fetch('/api/record-play', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ puzzle_id: puzzleId, player_name: playerName, moves, time_seconds: spent }) });
+                setTimeout(() => showEndModal(true), 800);
+            }
+        }
+
+        function showEndModal(isWin) {
+            const card = document.getElementById('end-card');
+            const icon = document.getElementById('status-icon');
+            document.getElementById('v-moves').innerText = moves;
+            const spent = (parseInt(puzzleData.time_limit) || 300) - secondsRemaining;
+            
+            if(isWin) {
+                document.getElementById('v-time').innerText = spent + "s";
+                document.getElementById('end-title').innerText = "Breach Successful";
+                document.getElementById('success-cta').classList.remove('hidden');
+                document.getElementById('failure-cta').classList.add('hidden');
+                card.style.borderColor = "rgba(16, 185, 129, 0.4)";
+                icon.innerHTML = '<i data-lucide="check" class="w-10 h-10 text-emerald-400"></i>';
+                icon.className = "w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-500/30 bg-emerald-500/10";
+            } else {
+                document.getElementById('v-time').innerText = "EXPIRED";
+                document.getElementById('end-title').innerText = "Breach Failed";
+                document.getElementById('failure-cta').classList.remove('hidden');
+                document.getElementById('success-cta').classList.add('hidden');
+                card.style.borderColor = "rgba(239, 68, 68, 0.4)";
+                icon.innerHTML = '<i data-lucide="clock" class="w-10 h-10 text-red-400"></i>';
+                icon.className = "w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-500/30 bg-red-500/10 shadow-lg";
+            }
+            const modal = document.getElementById('end-modal');
+            modal.classList.replace('hidden', 'flex');
+            setTimeout(() => { modal.classList.add('opacity-100'); card.classList.remove('scale-95'); }, 50);
+            lucide.createIcons();
+        }
+
+        document.getElementById('creator-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button');
+            const email = document.getElementById('reg-email').value;
+            btn.innerText = "Encrypting..."; btn.disabled = true;
+            try {
+                const res = await fetch('/api/request-otp', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: playerName, email: email }) });
+                if (res.ok) { showToast("Key sent!", true); setTimeout(() => window.location.href = '/index.html', 1500); }
+                else { showToast("Auth failure."); btn.innerText = "Retry"; btn.disabled = false; }
+            } catch (err) { showToast("Offline."); btn.disabled = false; }
+        });
+    </script>
+</body>
+</html>

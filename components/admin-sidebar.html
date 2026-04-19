@@ -1,0 +1,32 @@
+<aside id="sidebar" class="glass-panel w-64 h-full fixed md:relative z-50 flex flex-col sidebar-closed">
+    <div class="h-16 flex items-center px-6 border-b border-red-500/30 shrink-0 bg-red-950/20">
+        <i data-lucide="shield-alert" class="w-6 h-6 text-red-500 mr-3"></i>
+        <span class="text-lg font-black tracking-widest uppercase text-red-500">SYS ADMIN</span>
+    </div>
+
+    <nav class="flex-1 px-4 py-6 space-y-2">
+        <a href="/admin-dashboard.html" id="nav-admin-dash" class="w-full flex items-center px-4 py-3 rounded-lg text-slate-400 hover:bg-white/5 hover:text-white border border-transparent transition-all">
+            <i data-lucide="activity" class="w-5 h-5 mr-3"></i>
+            <span class="font-semibold text-sm tracking-wide">System Overview</span>
+        </a>
+        <a href="/admin-users.html" id="nav-admin-users" class="w-full flex items-center px-4 py-3 rounded-lg text-slate-400 hover:bg-white/5 hover:text-white border border-transparent transition-all">
+            <i data-lucide="users" class="w-5 h-5 mr-3"></i>
+            <span class="font-semibold text-sm tracking-wide">Manage Agents</span>
+        </a>
+        <a href="/admin-puzzles.html" id="nav-admin-puzzles" class="w-full flex items-center px-4 py-3 rounded-lg text-slate-400 hover:bg-white/5 hover:text-white border border-transparent transition-all">
+            <i data-lucide="grid" class="w-5 h-5 mr-3"></i>
+            <span class="font-semibold text-sm tracking-wide">Global Protocols</span>
+        </a>
+        <a href="/admin-profile.html" id="nav-admin-profile" class="w-full flex items-center px-4 py-3 rounded-lg text-slate-400 hover:bg-white/5 hover:text-white border border-transparent transition-all">
+            <i data-lucide="user-cog" class="w-5 h-5 mr-3"></i>
+            <span class="font-semibold text-sm tracking-wide">Admin Profile</span>
+        </a>
+    </nav>
+
+    <div class="p-4 border-t border-white/10 shrink-0">
+        <button onclick="adminLogout()" class="w-full flex items-center px-4 py-3 rounded-lg text-slate-400 hover:bg-white/5 hover:text-white transition-all">
+            <i data-lucide="log-out" class="w-5 h-5 mr-3"></i>
+            <span class="font-semibold text-sm tracking-wide">Lock System</span>
+        </button>
+    </div>
+</aside>

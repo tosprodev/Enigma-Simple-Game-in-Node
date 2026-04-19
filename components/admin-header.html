@@ -1,0 +1,41 @@
+<header class="h-16 glass-panel flex items-center justify-between px-4 sm:px-8 border-b border-white/10 z-20 shrink-0">
+    <div class="flex items-center">
+        <button onclick="toggleSidebar()" class="md:hidden text-slate-300 hover:text-white mr-4">
+            <i data-lucide="menu" class="w-6 h-6"></i>
+        </button>
+        
+        <h2 class="font-bold tracking-widest uppercase text-red-400 hidden sm:block" id="admin-page-title">Master Control</h2>
+        
+        <div class="md:hidden flex items-center">
+            <i data-lucide="shield-alert" class="w-5 h-5 text-red-500 mr-2"></i>
+            <span class="font-bold tracking-wider uppercase text-sm text-red-500">Admin</span>
+        </div>
+    </div>
+
+    <div class="relative ml-auto">
+        <button onclick="toggleAdminProfileDropdown()" class="flex items-center gap-3 focus:outline-none">
+            <div class="text-right hidden sm:block">
+                <p id="admin-header-name" class="text-sm font-semibold text-white">Loading...</p>
+                <p class="text-xs text-red-500 font-mono tracking-wider">Root Access</p>
+            </div>
+            <div class="w-10 h-10 rounded-full bg-red-900/50 border border-red-500/50 flex items-center justify-center shadow-[0_0_15px_rgba(239,68,68,0.2)] transition transform hover:scale-105">
+                <i data-lucide="shield" class="w-5 h-5 text-red-400"></i>
+            </div>
+        </button>
+
+        <div id="admin-profile-dropdown" class="hidden absolute right-0 mt-3 w-56 bg-slate-900 border border-red-500/30 rounded-xl shadow-2xl py-2 z-50 origin-top-right transform transition-all opacity-0 scale-95">
+            <div class="px-4 py-3 border-b border-white/10">
+                <p id="admin-dd-name" class="text-sm font-bold text-white truncate">Admin</p>
+                <p id="admin-dd-email" class="text-xs text-slate-400 truncate mt-0.5">root@system</p>
+            </div>
+            <div class="py-1">
+                <a href="/admin-profile.html" class="w-full flex items-center px-4 py-2 text-sm text-slate-300 hover:text-white hover:bg-white/5 transition">
+                    <i data-lucide="user-cog" class="w-4 h-4 mr-2 text-slate-400"></i> Profile Settings
+                </a>
+                <button onclick="adminLogout()" class="w-full flex items-center px-4 py-2 text-sm text-red-400 hover:bg-white/5 transition">
+                    <i data-lucide="log-out" class="w-4 h-4 mr-2"></i> Lock System
+                </button>
+            </div>
+        </div>
+    </div>
+</header>
