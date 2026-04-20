@@ -37,9 +37,7 @@ const db = new sqlite3.Database('./database.sqlite', (err) => {
     if (err) console.error('DB Error: ', err);
 });
 
-// --- DATABASE INITIALIZATION ---
 db.serialize(() => {
-    // Added 'password' and 'role' columns
     db.run(`CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT, 
         name TEXT NOT NULL, 
@@ -61,8 +59,7 @@ db.serialize(() => {
         id INTEGER PRIMARY KEY AUTOINCREMENT, puzzle_id TEXT, player_name TEXT, 
         moves INTEGER, time_seconds INTEGER, played_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
-
-    // --- SEED ADMIN ACCOUNT ---
+    
     db.get("SELECT * FROM users WHERE email = 'kaif.mth@gmail.com'", (err, row) => {
         if (!row) {
             db.run("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)", 
@@ -74,7 +71,6 @@ db.serialize(() => {
 
 const generateOTP = () => Math.floor(100000 + Math.random() * 900000).toString();
 
-// --- STANDARD AUTH & GAME ROUTES ---
 app.post('/api/request-otp', (req, res) => {
     const { name, email } = req.body;
     if (!email) return res.status(400).json({ error: 'Email is required' });
@@ -157,11 +153,6 @@ app.delete('/api/puzzle/:id', (req, res) => {
     });
 });
 
-// ==========================================
-// --- NEW: SYSTEM ADMIN ENDPOINTS ---
-// ==========================================
-
-// Admin Login
 app.post('/api/admin/login', (req, res) => {
     const { email, password } = req.body;
     db.get("SELECT * FROM users WHERE email = ? AND password = ? AND role = 'admin'", [email, password], (err, row) => {
@@ -170,7 +161,6 @@ app.post('/api/admin/login', (req, res) => {
     });
 });
 
-// Admin System Stats
 app.get('/api/admin/stats', (req, res) => {
     db.get("SELECT COUNT(*) as totalUsers FROM users", (err, users) => {
         db.get("SELECT COUNT(*) as totalPuzzles FROM puzzles", (err, puzzles) => {
@@ -181,14 +171,12 @@ app.get('/api/admin/stats', (req, res) => {
     });
 });
 
-// Admin Get All Users
 app.get('/api/admin/users', (req, res) => {
     db.all("SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC", (err, rows) => {
         res.json(rows);
     });
 });
 
-// Admin Delete User (Cascade purges their puzzles and analytics)
 app.delete('/api/admin/user/:email', (req, res) => {
     const targetEmail = req.params.email;
     if(targetEmail === 'kaif.mth@gmail.com') return res.status(400).json({error: "Cannot delete Master Admin"});
@@ -207,7 +195,6 @@ app.delete('/api/admin/user/:email', (req, res) => {
     });
 });
 
-// Admin Get All Puzzles Globally
 app.get('/api/admin/puzzles', (req, res) => {
     db.all(`
         SELECT p.id, p.title, p.type, p.grid_size, p.created_at, u.name as creator_name, u.email as creator_email,
@@ -220,11 +207,8 @@ app.get('/api/admin/puzzles', (req, res) => {
     });
 });
 
-// Admin Update Profile & Password
 app.put('/api/admin/profile', (req, res) => {
     const { currentEmail, currentPassword, newName, newEmail, newPassword } = req.body;
-
-    // 1. Verify the current password first
     db.get("SELECT * FROM users WHERE email = ? AND password = ? AND role = 'admin'", [currentEmail, currentPassword], (err, row) => {
         if (err) return res.status(500).json({ error: 'Database error' });
         if (!row) return res.status(401).json({ error: 'System Access Denied. Invalid current password.' });
@@ -233,7 +217,6 @@ app.put('/api/admin/profile', (req, res) => {
         const finalEmail = newEmail || row.email;
         const finalPassword = newPassword || row.password;
 
-        // 2. Check if the admin is changing their email to one that already exists
         if (finalEmail !== currentEmail) {
             db.get("SELECT id FROM users WHERE email = ?", [finalEmail], (err, existing) => {
                 if (existing) return res.status(400).json({ error: 'That email is already assigned to another operative.' });
@@ -244,7 +227,6 @@ app.put('/api/admin/profile', (req, res) => {
         }
     });
 
-    // 3. Execute the update
     function executeProfileUpdate(name, email, password, oldEmail) {
         db.run("UPDATE users SET name = ?, email = ?, password = ? WHERE email = ?", [name, email, password, oldEmail], (err) => {
             if (err) return res.status(500).json({ error: 'Failed to update system profile.' });
